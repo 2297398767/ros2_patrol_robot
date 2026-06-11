@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="fishbot">
+    
+    <!-- 🌟 新增：定义一个名为 use_ros2_control 的全局开关变量，默认值为 false -->
+    <xacro:arg name="use_ros2_control" default="false" />
+
+    <!-- 导入各种零件的 URDF 定义 -->
+    <xacro:include filename="$(find fishbot_description)/urdf/fishbot/common_inertia.xacro" />
+    <xacro:include filename="$(find fishbot_description)/urdf/fishbot/base.urdf.xacro" />
+    <xacro:include filename="$(find fishbot_description)/urdf/fishbot/sensor/imu.urdf.xacro" />
+    <xacro:include filename="$(find fishbot_description)/urdf/fishbot/sensor/laser.urdf.xacro" />
+    <xacro:include filename="$(find fishbot_description)/urdf/fishbot/sensor/camera.urdf.xacro" />
+    <xacro:include filename="$(find fishbot_description)/urdf/fishbot/actuator/wheel.urdf.xacro" />
+    <xacro:include filename="$(find fishbot_description)/urdf/fishbot/actuator/caster.urdf.xacro" />
+
+    <!-- 实例化机器人本体 -->
+    <xacro:base_xacro length="0.12" radius="0.1" />
+    <xacro:imu_xacro xyz="0 0 0.02" />
+    <xacro:laser_xacro xyz="0 0 0.10" />
+    <xacro:camera_xacro xyz="0.10 0 0.075" />
+    <xacro:wheel_xacro wheel_name="left" xyz="0 0.10 -0.06" />
+    <xacro:wheel_xacro wheel_name="right" xyz="0 -0.10 -0.06" />
+    <xacro:caster_xacro caster_name="front" xyz="0.08 0.0 -0.076" />
+    <xacro:caster_xacro caster_name="back" xyz="-0.08 0.0 -0.076" />
+
+    <!-- ================= 物理与插件组装区 ================= -->
+
+    <!-- 1. 包含基础物理属性（无论用哪个大脑，车轮摩擦力都是固定的，所以不需要条件判断） -->
+    <xacro:include filename="$(find fishbot_description)/urdf/fishbot/plugins/fishbot.gazebo.xacro" />
+    
+    <!-- 🧠 大脑切换逻辑开始 -->
+    <!-- 场景 A：如果开关变量为 false（unless 代表如果不），则加载旧版 Gazebo 差速大脑 -->
+    <xacro:unless value="$(arg use_ros2_control)">
+        <xacro:include filename="$(find fishbot_description)/urdf/fishbot/plugins/gazebo_js_publisher_plugin.xacro" />
+        <xacro:gazebo_js_publisher_plugin />
+        
+        <xacro:include filename="$(find fishbot_description)/urdf/fishbot/plugins/gazebo_control_plugin.xacro" />
+        <xacro:gazebo_control_plugin />
+    </xacro:unless>
+
+    <!-- 场景 B：如果开关变量为 true（if 代表如果），则加载全新的 ros2_control 大脑 -->
+    <xacro:if value="$(arg use_ros2_control)">
+        <xacro:include filename="$(find fishbot_description)/urdf/fishbot/fishbot.ros2_control.xacro" />
+        <xacro:fishbot_ros2_control />
+    </xacro:if>
+    <!-- 🧠 大脑切换逻辑结束 -->
+
+    <!-- 4. 传感器件（无论小车怎么移动，雷达和相机照常工作，所以独立放在外面） -->
+    <xacro:include filename="$(find fishbot_description)/urdf/fishbot/plugins/gazebo_sensor_plugin.xacro" />
+    <xacro:gazebo_sensor_plugin />
+
+</robot>

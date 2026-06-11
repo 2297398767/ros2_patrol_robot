@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="[http://www.ros.org/wiki/xacro](http://www.ros.org/wiki/xacro)">
+    <!-- 这里定义了一个名叫 gazebo_js_publisher_plugin 的宏（类似函数） -->
+    <xacro:macro name="gazebo_js_publisher_plugin">
+        <gazebo>
+            <plugin filename="gz-sim-joint-state-publisher-system"
+                    name="gz::sim::systems::JointStatePublisher">
+                <topic>/joint_states_gz</topic> 
+                <joint_name>left_wheel_joint</joint_name>
+                <joint_name>right_wheel_joint</joint_name>
+            </plugin>
+        </gazebo>
+   </xacro:macro>
+</robot>

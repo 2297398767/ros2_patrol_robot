@@ -1,0 +1,5 @@
+# 请求：合成文字
+string text
+---
+# 响应：合成结果
+bool result

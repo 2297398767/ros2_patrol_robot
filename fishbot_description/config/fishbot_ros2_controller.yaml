@@ -1,0 +1,40 @@
+# === 1. 调整大管家配置 ===
+controller_manager:
+  ros__parameters:
+    update_rate: 50  # 💡 提示：实车常用 1000Hz，但在 Gazebo 仿真中为了节省 CPU，推荐改为 50Hz
+    use_sim_time: true
+    
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    # 保留力矩控制器，但不作为主力
+    fishbot_effort_controller:
+      type: effort_controllers/JointGroupEffortController
+
+    # 🌟 新聘用的差速控制大脑
+    fishbot_diff_drive_controller:
+      type: diff_drive_controller/DiffDriveController
+
+# === 2. 差速控制器的详细参数 ===
+fishbot_diff_drive_controller:
+  ros__parameters:
+    left_wheel_names: ["left_wheel_joint"]
+    right_wheel_names: ["right_wheel_joint"]
+    wheel_separation: 0.20
+    wheel_radius: 0.032
+    
+    publish_rate: 50.0
+    odom_frame_id: odom
+    base_frame_id: base_footprint
+    
+    # 协方差矩阵：为以后引入 EKF 传感器融合打下极其重要的伏笔
+    pose_covariance_diagonal: [0.001, 0.001, 0.0, 0.0, 0.0, 0.01]
+    twist_covariance_diagonal: [0.001, 0.001, 0.0, 0.0, 0.0, 0.01]
+    
+    open_loop: true
+    enable_odom_tf: true
+    
+    # ⚠️ 工业级安全机制：0.5秒内没收到新指令，强制刹车！
+    cmd_vel_timeout: 0.5
+    
+    # 注意：新版 ros2_controllers 已移除了 use_stamped_vel 参数，它现在强制要求时间戳！
